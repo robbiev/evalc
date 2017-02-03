@@ -60,6 +60,18 @@ int eval1(Tree *t) {
   exit(1);
 }
 
+int maxop2(Tree *t) {
+  int left, right;
+  left = eval2(t->left);
+  right = eval2(t->right);
+  return left > right ? left : right;
+}
+
+int assignop2(Tree *t) {
+  t->left->symbol->value = eval2(t->right);
+  return t->left->symbol->value;
+}
+
 int addop2(Tree *t) {
   return eval2(t->left) + eval2(t->right);
 }
@@ -76,11 +88,11 @@ int divop2(Tree *t) {
 }
 
 int pushop2(Tree *t) {
-  return 0;
+  return t->value;
 }
 
 int pushsymop2(Tree *t) {
-  return 0;
+  return t->symbol->value;
 }
 
 int (*optab2[])(Tree *t) = {
@@ -88,6 +100,8 @@ int (*optab2[])(Tree *t) = {
   pushsymop2, /* VARIABLE */
   addop2,     /* ADD */
   divop2,     /* DIVIDE */
+  maxop2,     /* MAX */
+  assignop2,  /* ASSIGN */
 };
 
 int eval2(Tree *t) {
@@ -243,8 +257,11 @@ int main(void) {
     assign.left = &avar;
     assign.right = &max;
 
-    int result = eval1(&assign);
-    printf("result: %d\n", result);
+    int result1 = eval1(&assign);
+    printf("result1: %d\n", result1);
+
+    int result2 = eval2(&assign);
+    printf("result2: %d\n", result2);
   }
 
   return 0;
