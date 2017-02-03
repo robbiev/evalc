@@ -95,6 +95,7 @@ int pushsymop2(Tree *t) {
   return t->symbol->value;
 }
 
+/* the order matters, see the enum */
 int (*optab2[])(Tree *t) = {
   pushop2,    /* NUMBER */
   pushsymop2, /* VARIABLE */
@@ -130,7 +131,7 @@ void pushop3(void) {
 }
 
 void pushsymop3(void) {
-
+  stack[stackp++] = code[pc++].symbol->value;
 }
 
 void divop3(void) {
@@ -146,11 +147,21 @@ void divop3(void) {
 }
 
 void addop3(void) {
-
+  int left, right;
+  right = stack[--stackp];
+  left = stack[--stackp];
+  stack[stackp++] = left + right;
 }
 
 void maxop3(void) {
+  int left, right;
+  right = stack[--stackp];
+  left = stack[--stackp];
+  stack[stackp++] = left > right ? left : right;
+}
 
+void assignop3(void) {
+  code[pc++].symbol->value = stack[--stackp];
 }
 
 int generate(int codep, Tree *t) {
@@ -174,6 +185,14 @@ int generate(int codep, Tree *t) {
       code[codep++].op = divop3;
       return codep;
     case MAX:
+      codep = generate(codep, t->left);
+      codep = generate(codep, t->right);
+      code[codep++].op = maxop3;
+      return codep;
+    case ASSIGN:
+      codep = generate(codep, t->right);
+      code[codep++].op = assignop3;
+      code[codep++].symbol = t->left->symbol;
       return codep;
   }
   printf("unsupported operation: %d\n", t->op);
@@ -210,7 +229,7 @@ int main(void) {
   b.name = "b";
 
   Symbol c;
-  c.value = 4;
+  c.value = 10;
   c.name = "c";
 
   Symbol a;
@@ -262,6 +281,9 @@ int main(void) {
 
     int result2 = eval2(&assign);
     printf("result2: %d\n", result2);
+
+    int result3 = eval3(&assign);
+    printf("result3: %d\n", result3);
   }
 
   return 0;
